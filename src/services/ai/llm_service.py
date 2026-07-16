@@ -4,7 +4,7 @@ from src.prompt.system_prompt import SYSTEM_PROMPT
 
 
 async def chat(model:str,user:str):
-    response= acompletion(
+    response = await acompletion(
         model=model,
         messages=[
             {"role":"system","content":SYSTEM_PROMPT},
@@ -14,9 +14,7 @@ async def chat(model:str,user:str):
         temperature=0.7,
         max_tokens=100
     )
-    for chunk in response:
-
+    async for chunk in response:
         delta = chunk.choices[0].delta.content
-
         if delta:
             yield delta

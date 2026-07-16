@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from core.response import error_response
-from logs import get_logger
+from config.logger import get_logger
 
 logger = get_logger(__name__)
 
