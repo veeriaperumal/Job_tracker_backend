@@ -51,8 +51,14 @@ class PineconeService:
                 desc = self.pc.describe_index(index_name)
                 if desc.dimension == 384:
                     logger.info(f"Index '{index_name}' exists with correct dimension (384). Deleting all vectors inside it...")
-                    self.index.delete(delete_all=True)
-                    logger.info(f"Successfully deleted all vectors in Pinecone index '{index_name}'.")
+                    try:
+                        self.index.delete(delete_all=True)
+                        logger.info(f"Successfully deleted all vectors in Pinecone index '{index_name}'.")
+                    except Exception as delete_err:
+                        if "Namespace not found" in str(delete_err) or "404" in str(delete_err):
+                            logger.info("Pinecone index is already empty (no namespace found).")
+                        else:
+                            raise delete_err
                 else:
                     logger.warning(f"Index '{index_name}' exists but has dimension {desc.dimension} (expected 384). Deleting index to recreate...")
                     self.pc.delete_index(index_name)

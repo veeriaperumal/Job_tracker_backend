@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 from src.api.chat import router as chat_router
 from src.api.upload_pdf import router as pdf_router
+from src.api.jobs import router as jobs_router
 
 app = FastAPI(lifespan=lifespan,
               title= "JOB SEARCH AI")
@@ -50,3 +51,4 @@ def check_health():
 
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(pdf_router, prefix="/api/v1")
+app.include_router(jobs_router, prefix="/api/v1")
