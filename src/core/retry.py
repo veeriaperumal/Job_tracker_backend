@@ -1,27 +1,32 @@
-import time
+import asyncio
+from typing import AsyncGenerator
 from src.services.ai.llm_service import chat
+from src.core.exceptions import AIError
+from config.logger import get_logger
+
+logger = get_logger(__name__)
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2
 
-def retry_chat(model: str, user: str):
-
+async def chat_retry(model: str, user: str) -> AsyncGenerator[str, None]:
     last_exception = None
 
     for attempt in range(1, MAX_RETRIES + 1):
-
         try:
-            print(f"Attempt {attempt} using {model}")
-
-            return chat(model, user)
-
+            logger.info(f"Attempt {attempt} using {model}")
+            # We must iterate inside the try block to catch streaming exceptions.
+            async for chunk in chat(model, user):
+                yield chunk
+            # Successfully finished stream, exit the retry loop.
+            return
         except Exception as e:
-
             last_exception = e
-            print(f"Attempt {attempt} failed: {e}")
+            logger.error(f"Attempt {attempt} using {model} failed: {e}")
 
             if attempt < MAX_RETRIES:
-                print(f"Retrying after {RETRY_DELAY} seconds...")
-                time.sleep(RETRY_DELAY)
+                logger.info(f"Retrying after {RETRY_DELAY} seconds...")
+                await asyncio.sleep(RETRY_DELAY)
 
-    raise last_exception
+    if last_exception:
+        raise AIError(f"Model {model} failed after {MAX_RETRIES} retries.", details=str(last_exception))
